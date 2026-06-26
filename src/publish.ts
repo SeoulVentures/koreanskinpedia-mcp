@@ -8,7 +8,7 @@ const API_KEY = process.env.KSP_API_KEY;
 export interface ApiResult {
   ok: boolean;
   status: number;
-  data: { ok?: boolean; key?: string; slug?: string; store?: string; errors?: string[]; error?: string };
+  data: { ok?: boolean; key?: string; slug?: string; store?: string; publicPath?: string; url?: string; contentType?: string; errors?: string[]; error?: string };
 }
 
 async function post(path: string, body: unknown): Promise<ApiResult> {
