@@ -2,7 +2,7 @@
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
-import { publishArticle, publishProcedure, publishClinic, health } from './publish.js';
+import { publishArticle, publishProcedure, publishClinic, uploadImage, health } from './publish.js';
 
 const tools = [
   {
@@ -22,6 +22,16 @@ const tools = [
     description:
       '클리닉 생성/수정(API). 필드: name, area, verified, rating?, reviewCount?, procedures[], priceList[{name,time,price}], from, langs[], hours, address, payment[], about, reviews[].',
     inputSchema: { type: 'object', additionalProperties: true },
+  },
+  {
+    name: 'upload_image',
+    description:
+      '이미지 업로드(API). { filename, base64 }(base64는 data URL 또는 순수) → { publicPath: "/images/<id>.<ext>" }. 아티클 본문에 ![alt](publicPath) 로 삽입.',
+    inputSchema: {
+      type: 'object',
+      properties: { filename: { type: 'string' }, base64: { type: 'string' } },
+      required: ['filename', 'base64'],
+    },
   },
   {
     name: 'health',
@@ -59,6 +69,14 @@ server.setRequestHandler(CallToolRequestSchema, async (req) => {
         return text(fmt(await publishProcedure(args), '시술'));
       case 'upsert_clinic':
         return text(fmt(await publishClinic(args), '클리닉'));
+      case 'upload_image': {
+        const { filename, base64 } = args as { filename: string; base64: string };
+        const r = await uploadImage(filename, base64);
+        if (r.ok && r.data.ok) {
+          return text(`✅ 이미지 업로드\npublicPath: ${r.data.key}\n본문에 사용: ![](${r.data.publicPath})`);
+        }
+        return text(fmt(r, '이미지'));
+      }
       case 'health': {
         const h = await health();
         return text(h.ok ? `✅ API 정상 (store=${h.store}, bucket=${h.bucket})` : '❌ API 응답 없음(KSP_API_URL 확인)');

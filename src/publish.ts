@@ -28,6 +28,12 @@ export const publishArticle = (body: unknown) => post('/publish/article', body);
 export const publishProcedure = (body: unknown) => post('/publish/procedure', body);
 export const publishClinic = (body: unknown) => post('/publish/clinic', body);
 
+// 이미지 업로드: { filename, base64 } → { publicPath } (사이트 /images/<id>).
+// base64 는 data URL(data:image/png;base64,...) 또는 순수 base64.
+export async function uploadImage(filename: string, base64: string): Promise<ApiResult> {
+  return post('/publish/image', { filename, base64 });
+}
+
 export async function health(): Promise<{ ok: boolean; store?: string; bucket?: string | null }> {
   if (!API_URL) return { ok: false };
   try {
